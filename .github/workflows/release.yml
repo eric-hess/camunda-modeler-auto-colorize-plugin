@@ -1,0 +1,28 @@
+name: release
+on:
+  push:
+    tags:
+      - '*'
+jobs:
+  build:
+    runs-on: ubuntu-latest 
+    permissions: 
+      contents: write 
+      packages: write
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+          registry-url: 'https://npm.pkg.github.com'
+          # Defaults to the user or organization that owns the workflow file
+          scope: '@eric-hess'
+      - run: npm ci
+      - run: npm run build
+      - run: zip -j ${{ github.event.repository.name }}.zip dist/*
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ github.event.repository.name }}.zip
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
